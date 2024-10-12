@@ -41,7 +41,7 @@ class TestBoardSizeSelection(unittest.TestCase):
         self.game.select_mode()
         self.assertEqual(self.game.mode, "General")
 
-   # AC 2.2 Choose a valid board size
+   # AC 2.2 Test default game mode
     def test_default_game_mode(self):
         """Test if default board size is set correctly."""
         self.assertEqual(self.game.mode, "Simple")
@@ -78,6 +78,7 @@ class TestBoardSizeSelection(unittest.TestCase):
         self.game.place_move(0,0)
         self.assertEqual(self.game.board.spaces[0][0]['text'], "S")
         self.assertEqual(self.game.turn.color, "Blue")
+        self.assertEqual(self.game.gui.error_label['text'], "Error: Please pick unoccupied space")
 
    # AC 4.3 Make an invalid move outside board (simple)
     def test_make_out_of_bounds_simple_move(self):
