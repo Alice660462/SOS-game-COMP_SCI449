@@ -27,7 +27,7 @@ class TestBoardSizeSelection(unittest.TestCase):
         """Test if defaults to sixe 5 for invalid small board size."""
         self.game.board.select_size()  # invalid, size = 2
         self.assertEqual(self.game.board.size, 8)
-        self.assertEqual(self.game.gui.error_label['text'], "Error: Board size too small, must be 3 or more.")
+        self.assertEqual(self.game.gui.message_label['text'], "Error: Board size too small, must be 3 or more.")
     # AC 1.3 Board size not chosen
     def test_default_board_size(self):
         """Test if the default board size is 8 when not chosen."""
@@ -49,7 +49,7 @@ class TestBoardSizeSelection(unittest.TestCase):
    # AC 3.1 New game created with empty board of selected mode and board size
     def test_start_new_game(self):
         """Test if new game with defaults is created with empty board."""
-        self.game.board.select_size()
+        self.game.create_new_game()
         self.assertEqual(self.game.mode, "Simple")
         self.assertEqual(self.game.board.size, 8)
         self.assertEqual(self.game.turn.color, "Red")
@@ -61,7 +61,7 @@ class TestBoardSizeSelection(unittest.TestCase):
     def test_make_simple_move(self):
         """Test if valid moves set spaces and change turns."""
         self.game.players[1].symbol = 'O'
-        self.game.board.select_size()
+        self.game.create_new_game()
         self.game.place_move(0,0)
         self.assertEqual(self.game.board.spaces[0][0]['text'], "S")
         self.assertEqual(self.game.turn.color, "Blue")
@@ -73,19 +73,19 @@ class TestBoardSizeSelection(unittest.TestCase):
     def test_make_invalid_simple_move(self):
         """Test if valid moves set spaces and change turns."""
         self.game.players[1].symbol = 'O'
-        self.game.board.select_size()
+        self.game.create_new_game()
         self.game.place_move(0,0)
         self.game.place_move(0,0)
         self.assertEqual(self.game.board.spaces[0][0]['text'], "S")
         self.assertEqual(self.game.turn.color, "Blue")
-        self.assertEqual(self.game.gui.error_label['text'], "Error: Please pick unoccupied space")
+        self.assertEqual(self.game.gui.message_label['text'], "Error: Please pick unoccupied space")
 
    # AC 4.3 Make an invalid move outside board (simple)
     def test_make_out_of_bounds_simple_move(self):
         """Test if valid moves set spaces and change turns."""
-        self.game.board.select_size()
+        self.game.create_new_game()
         self.game.place_move(8,8)
-        self.assertEqual(self.game.gui.error_label['text'], "Error: Not a valid space")
+        self.assertEqual(self.game.gui.message_label['text'], "Error: Not a valid space")
         self.assertEqual(self.game.turn.color, "Red")
 
    # AC 4.1 Make a valid move (general) (GPT written)
@@ -124,11 +124,167 @@ class TestBoardSizeSelection(unittest.TestCase):
        # Attempt to place a move in an invalid position
         self.game.place_move(5, 5)  # Out of bounds
         self.assertEqual(self.game.board.spaces[0][0]['text'], 'S')  # The first move should still be there
-        self.assertIn("Not a valid space", self.game.gui.error_label.cget("text"))
+        self.assertIn("Not a valid space", self.game.gui.message_label.cget("text"))
 
         # Attempt to place a move in the same cell
         self.game.place_move(0, 0)  # Should already be occupied
-        self.assertIn("Please pick unoccupied space", self.game.gui.error_label.cget("text"))
+        self.assertIn("Please pick unoccupied space", self.game.gui.message_label.cget("text"))
+
+class TestGameFunctionality(unittest.TestCase):
+
+  @patch('tkinter.Entry.get', return_value = 3)
+  def setUp(self, mock_entry_get):
+    """This method runs before each test."""
+    self.root = tk.Tk()
+    self.game = sosGame(self.root)
+    self.game.create_new_game()
+
+  def tearDown(self):
+    """Destroy the root window after each test."""
+    self.root.destroy()
+
+  # AC 5.1 Simple game over - Red wins
+  def test_game_over_red_wins_simple(self):
+    self.game.players[0].symbol = 'S'
+    self.game.players[1].symbol = 'O'
+    self.game.place_move(0, 0)
+    self.game.place_move(0, 1)
+    self.game.place_move(0, 2)
+    self.assertEqual(self.game.players[0].score, 1)
+    self.assertEqual(self.game.detect_game_ended(), True)
+    self.assertEqual(self.game.determine_winner(), "Red")
+    self.assertEqual(self.game.gui.message_label['text'], "Congratulations! Red has won the game!")
+
+  # AC 5.2 Simple game over - Tie
+  def test_game_over_tie_simple(self):
+    self.game.place_move(0, 0)
+    self.game.place_move(0, 1)
+    self.game.place_move(0, 2)
+    self.game.place_move(1, 0)
+    self.game.place_move(1, 1)
+    self.game.place_move(1, 2)
+    self.game.place_move(2, 0)
+    self.game.place_move(2, 1)
+    self.game.place_move(2, 2)
+    self.assertEqual(self.game.players[0].score, 0)
+    self.assertEqual(self.game.players[1].score, 0)
+    self.assertEqual(self.game.detect_game_ended(), True)
+    self.assertEqual(self.game.determine_winner(), "tie")
+    self.assertEqual(self.game.gui.message_label['text'], "The game has ended in a tie!")
+
+  # AC 5.1 Simple game over - Blue wins
+  def test_game_over__blue_wins_simple(self):
+    self.game.place_move(0, 0)
+    self.game.place_move(0, 2)
+    self.game.place_move(1, 2)
+    self.game.players[1].symbol = 'O'
+    self.game.place_move(0, 1)
+    self.assertEqual(self.game.players[1].score, 1)
+    self.assertEqual(self.game.detect_game_ended(), True)
+    self.assertEqual(self.game.determine_winner(), "Blue")
+    self.assertEqual(self.game.gui.message_label['text'], "Congratulations! Blue has won the game!")
+
+  # AC 7.1 General game over - Red wins
+  @patch('tkinter.Entry.get', return_value = 3)
+  def test_game_over_red_wins_general(self, mock_entry_get):
+    self.game.mode = "General"
+    self.game.create_new_game()
+    self.game.place_move(0, 0)
+    self.game.place_move(0, 1)
+    self.game.place_move(0, 2)
+    self.game.place_move(2, 0)
+    self.game.place_move(2, 1)
+    self.game.place_move(2, 2)
+    self.game.place_move(1, 0)
+    self.game.place_move(1, 2)
+    self.game.players[0].symbol = 'O'
+    self.game.place_move(1, 1)
+    self.assertEqual(self.game.players[0].score, 4)
+    self.assertEqual(self.game.players[1].score, 0)
+    self.assertEqual(self.game.detect_game_ended(), True)
+    self.assertEqual(self.game.determine_winner(), "Red")
+    self.assertEqual(self.game.gui.message_label['text'], "Congratulations! Red has won the game!")
+
+  # AC 7.1 General game over - Tie
+  @patch('tkinter.Entry.get', return_value = 3)
+  def test_game_over_tie_general(self, mock_entry_get):
+    self.game.mode = "General"
+    self.game.create_new_game()
+    self.game.place_move(0, 0)
+    self.game.place_move(0, 1)
+    self.game.place_move(0, 2)
+    self.game.place_move(2, 0)
+    self.game.place_move(2, 1)
+    self.game.place_move(2, 2)
+    self.game.place_move(1, 1)
+    self.game.players[0].symbol = 'O'
+    self.game.players[1].symbol = 'O'
+    self.game.place_move(1, 2)
+    self.game.place_move(1, 0)
+    self.assertEqual(self.game.players[0].score, 1)
+    self.assertEqual(self.game.players[1].score, 1)
+    self.assertEqual(self.game.detect_game_ended(), True)
+    self.assertEqual(self.game.determine_winner(), "tie")
+    self.assertEqual(self.game.gui.message_label['text'], "The game has ended in a tie!")
+
+class TestGameOver(unittest.TestCase):
+
+    def setUp(self):
+        self.root = tk.Tk()
+        self.game = sosGame(self.root)
+        self.game.board.size = 3
+        self.game.board.spaces = [[{'text': ''} for _ in range(3)] for _ in range(3)]
+
+    def tearDown(self):
+        self.root.destroy()
+
+    @patch('sosGame.GameGUI.display_message')
+    def test_game_over_general(self, mock_display_message):
+        # Set up a game-ending scenario
+        self.game.mode = "General"
+        self.game.players[0].score = 2
+        self.game.players[1].score = 1
+        self.game.board.move_count = 8  # Full board
+
+        # Simulate the last move
+        self.game.place_move(2, 2)
+
+        # Check if the game ended
+        self.assertTrue(self.game.detect_game_ended())
+
+        # Check if the winner is correctly determined
+        winner = self.game.determine_winner()
+        self.assertEqual(winner, "Red")
+
+        # Verify that the display_message method was called with the correct information
+        expected_message = (
+            "Congratulations! Red has won the game!"
+        )
+        mock_display_message.assert_called_with(expected_message)
+
+    @patch('sosGame.GameGUI.display_message')
+    def test_game_over_tie(self, mock_display_message):
+        # Set up a tie scenario
+        self.game.mode = "General"
+        self.game.players[0].score = 1
+        self.game.players[1].score = 1
+        self.game.board.move_count = 8  # Full board
+
+        # Simulate the last move
+        self.game.place_move(2, 2)
+
+        # Check if the game ended
+        self.assertTrue(self.game.detect_game_ended())
+
+        # Check if the tie is correctly determined
+        winner = self.game.determine_winner()
+        self.assertEqual(winner, "tie")
+
+        # Verify that the display_message method was called with the correct information
+        expected_message = (
+            "The game has ended in a tie!"
+        )
+        mock_display_message.assert_called_with(expected_message)
 
 
 if __name__ == '__main__':

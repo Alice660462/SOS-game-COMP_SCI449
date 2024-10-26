@@ -23,7 +23,7 @@ class GameGUI:
     self.board_size_label.grid(row=2, column=0)
     self.board_size_entry = tk.Entry(self.root, width=3)
     self.board_size_entry.grid(row=2, column=1)
-    self.board_size_button = tk.Button(self.root, text="Submit", command=self.game.board.select_size)
+    self.board_size_button = tk.Button(self.root, text="New Game", command=self.game.create_new_game)
     self.board_size_button.grid(row=2, column=2)
 
     self.state_label = tk.Label(self.root, text=f"Mode: {self.game.mode}, size: {self.game.board.size}")
@@ -47,8 +47,13 @@ class GameGUI:
     self.blue_o_radio = tk.Radiobutton(self.root, text="O", variable=self.selected_blue_move, value="O", command=self.update_blue_symbol)
     self.blue_o_radio.grid(row=5, column=2)
 
-    self.error_label = tk.Label(self.root, text="")
-    self.error_label.grid(row=6, column=0, columnspan=3)
+    self.message_label = tk.Label(self.root, text="")
+    self.message_label.grid(row=6, column=0, columnspan=3)
+
+    self.red_score_label = tk.Label(self.root, text=f"Red: {self.game.players[0].score}")
+    self.red_score_label.grid(row=7, column=0)
+    self.blue_score_label = tk.Label(self.root, text=f"Blue: {self.game.players[1].score}")
+    self.blue_score_label.grid(row=7, column=1)
 
     self.display_board()
 
@@ -58,11 +63,15 @@ class GameGUI:
   def display_turn(self):
     self.player_label.config(text=f"Player: {self.game.turn.color}")
 
-  def display_error(self, error):
-    self.error_label.config(text=f"Error: {error}")
+  def display_scores(self):
+    self.red_score_label.config(text=f"Red: {self.game.players[0].score}")
+    self.blue_score_label.config(text=f"Blue: {self.game.players[1].score}")
 
-  def clear_error(self):
-    self.error_label.config(text=f"")
+  def display_message(self, message):
+    self.message_label.config(text=f"{message}")
+
+  def clear_message(self):
+    self.message_label.config(text=f"")
 
   def display_board(self):
     for i in range(self.game.board.size):
