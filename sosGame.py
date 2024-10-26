@@ -112,6 +112,7 @@ class sosGame:
     self.board.select_size()
     self.players[0].score = 0
     self.players[1].score = 0
+    self.turn = self.players[0]
     self.gui.display_scores()
     self.gui.display_board()
     self.gui.show_stuff()
