@@ -32,28 +32,38 @@ class GameGUI:
     self.player_label.grid(row=3, column=2)
 
     self.selected_red_move = tk.StringVar(value="S")
+    self.selected_red_player_type = tk.StringVar(value="Human")
     self.red_label = tk.Label(self.root, text="Red:")
     self.red_label.grid(row=4, column=0)
+    self.red_human_radio = tk.Radiobutton(self.root, text="Human", variable=self.selected_red_player_type, value="Human", command=self.update_red_player_type)
+    self.red_human_radio.grid(row=4, column=1)
+    self.red_comp_radio = tk.Radiobutton(self.root, text="Computer", variable=self.selected_red_player_type, value="Computer", command=self.update_red_player_type)
+    self.red_comp_radio.grid(row=4, column=2)
     self.red_s_radio = tk.Radiobutton(self.root, text="S", variable=self.selected_red_move, value="S", command=self.update_red_symbol)
-    self.red_s_radio.grid(row=4, column=1)
+    self.red_s_radio.grid(row=5, column=1)
     self.red_o_radio = tk.Radiobutton(self.root, text="O", variable=self.selected_red_move, value="O", command=self.update_red_symbol)
-    self.red_o_radio.grid(row=4, column=2)
+    self.red_o_radio.grid(row=5, column=2)
 
     self.selected_blue_move = tk.StringVar(value="S")
+    self.selected_blue_player_type = tk.StringVar(value="Human")
     self.blue_label = tk.Label(self.root, text="Blue:")
-    self.blue_label.grid(row=5, column=0)
+    self.blue_label.grid(row=6, column=0)
+    self.blue_human_radio = tk.Radiobutton(self.root, text="Human", variable=self.selected_blue_player_type, value="Human", command=self.update_blue_player_type)
+    self.blue_human_radio.grid(row=6, column=1)
+    self.blue_comp_radio = tk.Radiobutton(self.root, text="Computer", variable=self.selected_blue_player_type, value="Computer", command=self.update_blue_player_type)
+    self.blue_comp_radio.grid(row=6, column=2)
     self.blue_s_radio = tk.Radiobutton(self.root, text="S", variable=self.selected_blue_move, value="S", command=self.update_blue_symbol)
-    self.blue_s_radio.grid(row=5, column=1)
+    self.blue_s_radio.grid(row=7, column=1)
     self.blue_o_radio = tk.Radiobutton(self.root, text="O", variable=self.selected_blue_move, value="O", command=self.update_blue_symbol)
-    self.blue_o_radio.grid(row=5, column=2)
+    self.blue_o_radio.grid(row=7, column=2)
 
     self.message_label = tk.Label(self.root, text="")
-    self.message_label.grid(row=6, column=0, columnspan=3)
+    self.message_label.grid(row=8, column=0, columnspan=3)
 
     self.red_score_label = tk.Label(self.root, text=f"Red: {self.game.players[0].score}")
-    self.red_score_label.grid(row=7, column=0)
+    self.red_score_label.grid(row=9, column=0)
     self.blue_score_label = tk.Label(self.root, text=f"Blue: {self.game.players[1].score}")
-    self.blue_score_label.grid(row=7, column=1)
+    self.blue_score_label.grid(row=9, column=1)
 
     self.display_board()
 
@@ -89,3 +99,7 @@ class GameGUI:
     self.game.players[0].change_symbol(self.selected_red_move.get())
   def update_blue_symbol(self):
     self.game.players[1].change_symbol(self.selected_blue_move.get())
+  def update_red_player_type(self):
+    self.game.players[0].change_type(self.selected_red_player_type.get())
+  def update_blue_player_type(self):
+    self.game.players[1].change_type(self.selected_blue_player_type.get())

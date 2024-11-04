@@ -1,4 +1,4 @@
-
+import random
 import tkinter as tk
 from sosGUI import GameGUI
 
@@ -7,9 +7,13 @@ class Player:
     self.color = color
     self.score = 0
     self.symbol = 'S'
+    self.type = 'Human' # Alternatively, 'Computer'
 
   def change_symbol(self, symbol):
     self.symbol = symbol
+
+  def change_type(self, type):
+    self.type = type
 
   def get_score(self):
     return self.score
@@ -44,20 +48,34 @@ class sosGame:
       self.board.set_move(i, j, self.current_symbol())
       self.score_sos(i, j)
       self.gui.display_scores()
-      self.change_turn()
       if (self.detect_game_ended()):
         if (self.determine_winner() != 'tie'):
           self.gui.display_message(f"Congratulations! {self.determine_winner()} has won the game!")
         else:
           self.gui.display_message("The game has ended in a tie!")
         return
+      self.change_turn()
     else:
       self.gui.display_message("Error: Please pick unoccupied space")
 
   def change_turn(self):
     self.turn = self.players[1] if self.turn == self.players[0] else self.players[0]
     self.gui.display_turn()
+    if self.turn.type == 'Computer':
+      self.computer_turn()
 
+  def computer_turn(self):
+    symbol = random.choice(['S', 'O'])
+    i = random.randint(0,self.board.size - 1)
+    j = random.randint(0,self.board.size - 1)
+    while (not self.board.valid_move(i, j) or not self.board.good_move(i, j, symbol)):
+      symbol = random.choice(['S', 'O'])
+      i = random.randint(0,self.board.size - 1)
+      j = random.randint(0,self.board.size - 1)
+    self.turn.change_symbol(symbol)
+    self.place_move(i, j)
+
+  #change to detect_sos()
   def score_sos(self, i, j):
     if self.board.spaces[i][j]['text'] == 'O':
       if i > 0 and j > 0 and i < self.board.size - 1 and j < self.board.size - 1 and self.board.spaces[i + 1][j + 1]['text'] == 'S' and self.board.spaces[i - 1][j - 1]['text'] == 'S':
@@ -116,6 +134,8 @@ class sosGame:
     self.gui.display_scores()
     self.gui.display_board()
     self.gui.show_stuff()
+    if(self.players[0].type == 'Computer'):
+      self.computer_turn()
 
 class sosBoard:
   def __init__(self, game, size):
@@ -127,25 +147,57 @@ class sosBoard:
   def select_size(self):
     new_size = int(self.game.gui.board_size_entry.get()) if self.game.gui.board_size_entry.get() != "" else 8
     if new_size > 2:
-#      self.game.gui.clear_board()
- #     self.game.gui.clear_message()
       self.size = new_size
       self.spaces = [[None for _ in range(self.size)] for _ in range(self.size)]
       self.move_count = 0
-#      self.game.gui.display_board()
- #     self.game.gui.show_stuff()
     else:
- #     self.game.gui.clear_board()
-  #    self.game.gui.clear_message()
       self.size = 8
       self.spaces = [[None for _ in range(self.size)] for _ in range(self.size)]
-#      self.game.gui.display_board()
- #     self.game.gui.show_stuff()
       self.game.gui.display_message("Error: Board size too small, must be 3 or more.")
 
   def set_move(self, i, j, symbol):
       self.spaces[i][j]['text'] = symbol.upper()
       self.move_count += 1
+
+  def valid_move(self, i, j):
+    return self.spaces[i][j]["text"] == ''
+
+  def good_move(self, i, j, symbol):
+    return self.detect_sos(i, j, symbol) >= 0
+
+  def detect_sos(self, i, j, symbol):
+    count = 0
+    if symbol == 'O':
+      if i > 0 and j > 0 and i < self.size - 1 and j < self.size - 1 and self.spaces[i + 1][j + 1]['text'] == 'S' and self.spaces[i - 1][j - 1]['text'] == 'S':
+        count += 1
+      if i > 0 and j > 0 and i < self.size - 1 and j < self.size - 1 and self.spaces[i + 1][j - 1]['text'] == 'S' and self.spaces[i - 1][j + 1]['text'] == 'S':
+        count += 1
+      if j > 0 and j < self.size - 1 and self.spaces[i][j + 1]['text'] == 'S' and self.spaces[i][j - 1]['text'] == 'S':
+        count += 1
+      if i > 0 and i < self.size - 1 and self.spaces[i + 1][j]['text'] == 'S' and self.spaces[i - 1][j]['text'] == 'S':
+        count += 1
+    if symbol == 'S':
+      if i > 1 and j > 1 and i < self.size - 2 and j < self.size - 2 and self.spaces[i + 1][j + 1]['text'] == 'O' and self.spaces[i + 2][j + 2]['text'] == 'S':
+        count += 1
+      if j > 1 and i < self.size - 2 and self.spaces[i + 1][j - 1]['text'] == 'O' and self.spaces[i + 2][j - 2]['text'] == 'S':
+        count += 1
+      if j < self.size - 2 and self.spaces[i][j + 1]['text'] == 'O' and self.spaces[i][j + 2]['text'] == 'S':
+        count += 1
+      if i < self.size - 2 and self.spaces[i + 1][j]['text'] == 'O' and self.spaces[i + 2][j]['text'] == 'S':
+        count += 1
+      if i > 1 and j > 1 and self.spaces[i - 1][j - 1]['text'] == 'O' and self.spaces[i - 2][j - 2]['text'] == 'S':
+        count += 1
+      if i > 1 and j < self.size - 2 and self.spaces[i - 1][j + 1]['text'] == 'O' and self.spaces[i - 2][j + 2]['text'] == 'S':
+        count += 1
+      if j > 1 and self.spaces[i][j - 1]['text'] == 'O' and self.spaces[i][j - 2]['text'] == 'S':
+        count += 1
+      if i > 1 and self.spaces[i - 1][j]['text'] == 'O' and self.spaces[i - 2][j]['text'] == 'S':
+        count += 1
+    return count
+
+  def detect_bad_move(self):
+    if(False):
+      True
 
   def is_board_full(self):
       return self.move_count >= self.size * self.size
