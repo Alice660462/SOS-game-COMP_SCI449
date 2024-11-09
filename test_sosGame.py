@@ -60,8 +60,8 @@ class TestBoardSizeSelection(unittest.TestCase):
    # AC 4.1 Make a valid move (simple)
     def test_make_simple_move(self):
         """Test if valid moves set spaces and change turns."""
-        self.game.players[1].symbol = 'O'
         self.game.create_new_game()
+        self.game.players[1].symbol = 'O'
         self.game.place_move(0,0)
         self.assertEqual(self.game.board.spaces[0][0]['text'], "S")
         self.assertEqual(self.game.turn.color, "Blue")
@@ -286,6 +286,56 @@ class TestGameOver(unittest.TestCase):
         )
         mock_display_message.assert_called_with(expected_message)
 
+class TestGameOver(unittest.TestCase):
+
+    def setUp(self):
+      self.root = tk.Tk()
+      self.game = sosGame(self.root)
+
+    def tearDown(self):
+        self.root.destroy()
+
+    # AC 8.1 Computer makes move after Human player moves
+    def test_computer_moves_after_human(self):
+      self.game.players[0].type = 'Human'
+      self.game.players[1].type = 'Computer'
+      self.game.create_new_game()
+      self.game.place_move(0, 0);
+      filled_spaces = 0
+      for i in range(self.game.board.size):
+        for j in range(self.game.board.size):
+          if self.game.board.spaces[i][j]['text'] != '':
+            filled_spaces += 1
+      self.assertEqual(filled_spaces, 2)
+      self.assertEqual(self.game.turn.color, 'Red')
+
+    # AC 8.2 Computer makes first move when red in new game
+    def test_computer_makes_first_move(self):
+      self.game.players[0].type = 'Computer'
+      self.game.create_new_game()
+      filled_spaces = 0
+      for i in range(self.game.board.size):
+        for j in range(self.game.board.size):
+          if self.game.board.spaces[i][j]['text'] != '':
+            filled_spaces += 1
+      self.assertEqual(filled_spaces, 1)
+      self.assertEqual(self.game.turn.color, 'Blue')
+
+    # AC 8.3 Computer makes winning moves
+    def test_computer_makes_winning_moves(self):
+      self.game.players[1].type = 'Computer'
+      self.game.mode = 'General'
+      self.game.create_new_game()
+
+      #create an 'S_S' and an 'SO_' configuration
+      self.game.board.set_move(0, 0, 'S')
+      self.game.board.set_move(0, 1, 'O')
+      self.game.place_move(2, 0)
+
+      #verify that computer places in both positions
+      self.assertEqual(self.game.players[1].score, 1)
+      self.game.place_move(1, 1)
+      self.assertEqual(self.game.players[1].score, 2)
 
 if __name__ == '__main__':
     unittest.main()
