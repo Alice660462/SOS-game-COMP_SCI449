@@ -65,13 +65,19 @@ class sosGame:
       self.computer_turn()
 
   def computer_turn(self):
-    symbol = random.choice(['S', 'O'])
-    i = random.randint(0,self.board.size - 1)
-    j = random.randint(0,self.board.size - 1)
-    while (not self.board.valid_move(i, j) or not self.board.good_move(i, j, symbol)):
+    move = self.board.best_move()
+    if (move[2] != ''):
+      i = move[0][0]
+      j = move[0][1]
+      symbol = move[2]
+    else:
       symbol = random.choice(['S', 'O'])
       i = random.randint(0,self.board.size - 1)
       j = random.randint(0,self.board.size - 1)
+      while (not self.board.valid_move(i, j) or not self.board.good_move(i, j, symbol)):
+        symbol = random.choice(['S', 'O'])
+        i = random.randint(0,self.board.size - 1)
+        j = random.randint(0,self.board.size - 1)
     self.turn.change_symbol(symbol)
     self.place_move(i, j)
 
@@ -130,6 +136,8 @@ class sosGame:
     self.board.select_size()
     self.players[0].score = 0
     self.players[1].score = 0
+    self.players[0].change_symbol(self.gui.selected_red_move.get())
+    self.players[1].change_symbol(self.gui.selected_blue_move.get())
     self.turn = self.players[0]
     self.gui.display_scores()
     self.gui.display_board()
@@ -164,6 +172,27 @@ class sosBoard:
 
   def good_move(self, i, j, symbol):
     return self.detect_sos(i, j, symbol) >= 0
+
+  def best_move(self):
+    position = [0, 0]
+    max_count = 0
+    best_symbol = ''
+    for i in range(self.size):
+      for j in range(self.size):
+        if(self.valid_move(i, j)):
+          count_S = self.detect_sos(i, j, 'S')
+          count_O = self.detect_sos(i, j, 'O')
+          if (count_O > count_S):
+            sos_count = count_O
+            new_symbol = 'O'
+          else:
+            sos_count = count_S
+            new_symbol = 'S'
+          if(sos_count > max_count):
+            max_count = sos_count
+            position = [i, j]
+            best_symbol = new_symbol
+    return [position, max_count, best_symbol]
 
   def detect_sos(self, i, j, symbol):
     count = 0
